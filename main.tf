@@ -22,6 +22,7 @@ resource "openstack_networking_subnet_v2" "public" {
     network_id = "${openstack_networking_network_v2.public.id}"
     cidr = "192.168.1.0/24"
     ip_version = 4
+    gateway_ip = ""  // .1 will be used as gateway
     // dns_nameservers = ["8.8.8.8","8.8.4.4"]
 }
 
@@ -46,6 +47,7 @@ resource "openstack_networking_subnet_v2" "internal" {
     network_id = "${openstack_networking_network_v2.internal.id}"
     cidr = "10.10.10.0/24"
     ip_version = 4
+    no_gateway = true
     // dns_nameservers = ["8.8.8.8","8.8.4.4"]
 }
 #------------------------------------------------------------------------------
@@ -150,9 +152,9 @@ resource "openstack_compute_instance_v2" "cp_instance" {
   network {  // network number #0
     uuid = "${openstack_networking_network_v2.public.id}"
   }
-#   network {  // network number #1
-#     uuid = "${openstack_networking_network_v2.internal.id}"
-#   }
+  network {  // network number #1
+    uuid = "${openstack_networking_network_v2.internal.id}"
+  }
 }
 
 ###
