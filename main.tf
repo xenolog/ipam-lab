@@ -148,14 +148,20 @@ resource "openstack_compute_instance_v2" "cp_instance" {
   flavor_id = "${data.openstack_compute_flavor_v2.cp_instance_flavor.id}"
   key_pair  = "${openstack_compute_keypair_v2.auth_kp.id}"
   security_groups = ["${openstack_networking_secgroup_v2.secgroup.name}"]  // using 'name' is a workaround to repeatly changing name secgroup resource to ID
-
+  user_data = templatefile("./templates/cp_user_data.tmpl", {
+    minion_numbers = var.minion_numbers
+    minions        = openstack_compute_instance_v2.minion_instance
+  })
   network {  // network number #0
     uuid = "${openstack_networking_network_v2.public.id}"
   }
   network {  // network number #1
     uuid = "${openstack_networking_network_v2.internal.id}"
   }
-  depends_on = ["openstack_networking_secgroup_v2.secgroup"]
+  depends_on = [
+    "openstack_networking_secgroup_v2.secgroup",
+    "openstack_compute_instance_v2.minion_instance"
+  ]
 }
 
 #------------------------------------------------------------------------------

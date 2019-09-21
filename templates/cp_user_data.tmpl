@@ -1,0 +1,16 @@
+#cloud-config
+# vim: syntax=yaml
+write_files:
+  - content: |
+      net.ipv4.ip_forward = 1
+      net.ipv4.conf.all.forwarding = 1
+      net.ipv4.conf.default.forwarding = 1
+      net.ipv4.conf.all.rp_filter = 0
+    path: /etc/sysctl.d/999-user_data.conf
+runcmd:
+  - sed 's/^\([ \t]*IPV6=\)\(.*\)/\1no/'                          -i /etc/default/ufw
+  - sed 's/^\([ \t]*DEFAULT_FORWARD_POLICY=\)\(.*\)/\1"ACCEPT"/'  -i /etc/default/ufw
+  - sed 's/^\([ \t]*DEFAULT_INPUT_POLICY=\)\(.*\)/\1"ACCEPT"/'    -i /etc/default/ufw
+  - ufw enable
+
+###
