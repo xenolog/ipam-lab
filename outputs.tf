@@ -21,7 +21,7 @@ output "cp_instance_internal_ip_addr" {
 }
 
 output "minions_internal_ip_addrs" {
-  value = [for m in values(openstack_compute_instance_v2.minion_instance): "${m.name}: ${m.network[1].fixed_ip_v4}" ]
+  value = { for m in values(openstack_compute_instance_v2.minion_instance): m.name => m.network[1].fixed_ip_v4 }
 }
 
 ###
