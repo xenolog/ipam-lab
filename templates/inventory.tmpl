@@ -1,0 +1,40 @@
+# ## Configure 'ip' variable to bind kubernetes services on a
+# ## different ip than the default iface
+# ## We should set etcd_member_name for etcd cluster. The node that is not a etcd member do not need to set the value, or can set the empty string value.
+[all]
+# node1 ansible_host=95.54.0.12  # ip=10.3.0.1 etcd_member_name=etcd1
+${cp.name} ip=${cp.network.1.fixed_ip_v4} etcd_member_name=etcd1
+%{ for num, minion in minions ~}
+${minion.name} ansible_port=220${num} ip=${minion.network.1.fixed_ip_v4}
+%{ endfor ~}
+
+
+#{minions_access}
+# ## configure a bastion host if your nodes are not directly reachable
+# bastion ansible_host=x.x.x.x ansible_user=some_user
+
+[kube-master]
+${cp.name}
+
+[etcd]
+${cp.name}
+
+[kube-node]
+%{ for num, minion in minions ~}
+${minion.name}
+%{ endfor ~}
+
+[calico-rr]
+${cp.name}
+
+[k8s-cluster:children]
+kube-master
+kube-node
+calico-rr
+
+[all:vars]
+#ansible_ssh_private_key_file = {key_path}
+ansible_ssh_user = ubuntu
+ansible_host=${floating_ip}
+
+###

@@ -1,6 +1,10 @@
-variable "pref" {
+variable "env_name" {
   type    = string
-  default = "sv"
+}
+
+variable "minion_numbers" {
+  type    = list(string)
+  default = ["01", "02"]
 }
 
 variable "clouds_yaml_entry" {
@@ -30,7 +34,19 @@ variable "cp_instance_image_name" {
 
 variable "cp_instance_flavor_name" {
   type    = string
-  default = "re.jenkins.slave"
+#   default = "re.jenkins.slave"
+  default = "dev.cfg"
+}
+
+variable "minion_instance_flavor_name" {
+  type    = string
+#   default = "re.jenkins.slave"
+  default = "dev.mon"
+}
+
+variable "output_inventory_file" {
+  type    = string
+  default = "./inventory.ini"
 }
 
 ###
