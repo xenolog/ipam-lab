@@ -6,11 +6,25 @@ write_files:
       net.ipv4.conf.all.forwarding = 1
       net.ipv4.conf.default.forwarding = 1
       net.ipv4.conf.all.rp_filter = 0
+      net.ipv4.conf.default.rp_filter = 0
     path: /etc/sysctl.d/999-user_data.conf
 runcmd:
-  - sed 's/^\([ \t]*IPV6=\)\(.*\)/\1no/'                          -i /etc/default/ufw
-  - sed 's/^\([ \t]*DEFAULT_FORWARD_POLICY=\)\(.*\)/\1"ACCEPT"/'  -i /etc/default/ufw
-  - sed 's/^\([ \t]*DEFAULT_INPUT_POLICY=\)\(.*\)/\1"ACCEPT"/'    -i /etc/default/ufw
-  - ufw enable
+  - systemctl restart systemd-sysctl
+  - /sbin/iptables -P INPUT   ACCEPT
+  - /sbin/iptables -P OUTPUT  ACCEPT
+  - /sbin/iptables -P FORWARD ACCEPT
+  - /sbin/iptables -t nat -P POSTROUTING ACCEPT
+  - /sbin/iptables -t nat -P PREROUTING  ACCEPT
+%{ for num, minion in minions ~}
+  # ${minion.name}
+  - /sbin/iptables -t nat -A PREROUTING  -p tcp --dport 220${num} -j DNAT --to-destination ${minion.network.1.fixed_ip_v4}:22
+  - /sbin/iptables -t nat -A POSTROUTING -p tcp -d ${minion.network.1.fixed_ip_v4} --dport 22 -j MASQUERADE
+  - /sbin/iptables -A FORWARD -p tcp --dport 220${num} -j ACCEPT
+%{ endfor ~}
+  - apt update -y
+  - apt install -y iptables-persistent netfilter-persistent
+  - /usr/share/netfilter-persistent/plugins.d/15-ip4tables save
+  - systemctl daemon-reload
+  - systemctl enable netfilter-persistent.service
 
 ###
