@@ -39,4 +39,17 @@ ansible_host = ${floating_ip}
 ansible_ssh_common_args = -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes
 ansible_become = true
 ansible_become_user = root
+cluster_name = ${env_name}.local
+access_ip = ${floating_ip}
+cloud_provider = openstack
+kube_network_plugin = calico
+upstream_dns_servers = 8.8.8.8, 8.8.4.4, /mirantis.net/172.18.32.6
+nameservers = 8.8.8.8, 8.8.4.4
+authorization_modes = AlwaysAllow
+download_run_once = false
+deploy_netchecker = false
+# Required for hyperkube >=1.3.4. Set to false if installing old hyperkube
+overwrite_hyperkube_cni = true
+enable_network_policy = true
+kube_apiserver_insecure_port = "8080"
 ###
