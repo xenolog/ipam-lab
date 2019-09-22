@@ -4,7 +4,7 @@ provider "openstack" {
 
 resource "openstack_compute_keypair_v2" "auth_kp" {
   name = "${var.env_name}__auth_kp"
-  public_key = "${var.ssh_public_key}"
+  public_key = "${file(local.ssh_public_key_file)}"
 }
 
 #------------------------------------------------------------------------------

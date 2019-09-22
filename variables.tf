@@ -22,9 +22,16 @@ variable "floating_if_pool_name" {
   default = "public"
 }
 
-variable "ssh_public_key" {
+variable "ssh_private_key_file" {
   type    = string
-  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDbNUC2UJiVk0bHmbVBHd4L22M3Mc3HVPdZZja7gzzUJDI/MIGoTSX8/Q38olBHg6i/9ePzroMqQS70x/LvuEgfKMDUcEBhggq22zea/wohMmMPwiGTEJ3j0CfckXM2cfjRHweHu4U//4SiSgLHi3nnEhYJUvFkOq10qOtZd2iT76sbKpnIEcRVfDcIy01G/wZQLX0SiCk8hWh9ERBqnW2OjNhwG/a2SdoPN25T1HmHAhLJykcGXb7BmrMNe7XFcNsqleMsopTXcqtZBu+ysEbNywPQKUiJrwqOtzkncQwwuKlr53EaXwBY5UHQwoFSXXi28JjmvEZAzA+UBMrPDHrx svasilenko@mrnt"
+  default = "~/.ssh/id_rsa"
+}
+variable "ssh_public_key_file" {
+  type    = string
+  default = ""
+}
+locals {
+  ssh_public_key_file = "${var.ssh_public_key_file != "" ? var.ssh_public_key_file : "${var.ssh_private_key_file}.pub"}"
 }
 
 variable "cp_instance_image_name" {

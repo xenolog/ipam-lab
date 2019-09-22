@@ -2,3 +2,4 @@ clouds.yaml
 .terraform
 terraform.tfstate*
 inventory.ini
+kubespray
