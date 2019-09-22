@@ -53,7 +53,7 @@ variable "minion_instance_flavor_name" {
 
 variable "output_inventory_file" {
   type    = string
-  default = "./inventory.ini"
+  default = "./inventory.yaml"
 }
 
 ###

@@ -2,4 +2,5 @@ clouds.yaml
 .terraform
 terraform.tfstate*
 inventory.ini
+inventory.yaml
 kubespray
