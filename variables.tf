@@ -58,7 +58,7 @@ variable "output_inventory_file" {
 
 variable "kubespray_network_plugin" {
   type    = string
-  default = "calico"
+  default = "flannel"
 }
 
 ###

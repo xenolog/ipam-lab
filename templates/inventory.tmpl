@@ -1,10 +1,6 @@
 ---
 all: # keys must be unique, i.e. only one 'hosts' per group
     hosts:
-        # node1:
-            # ansible_host: 95.54.0.12
-            # ip: 10.3.0.1
-            # etcd_member_name: etcd1
         ${replace(cp.name, "_", "-")}:
             ip: ${cp.network.1.fixed_ip_v4}
             public_ip: ${cp.network.0.fixed_ip_v4}
@@ -25,17 +21,17 @@ all: # keys must be unique, i.e. only one 'hosts' per group
         ansible_become_user: root
         # --- kubespray related vars --- #
         cluster_name: ${env_name}.local
-        access_ip: ${floating_ip}
-        #cloud_provider: openstack
+        access_ip: ${cp.network.1.fixed_ip_v4}
         kube_network_plugin: ${network_plugin}
         upstream_dns_servers:
             - 8.8.8.8
             - 8.8.4.4
-            - /mirantis.net/172.18.32.6
+        docker_dns_servers_strict: false  # uncomment this if you want to use more than two upstream_dns_servers
         nameservers:
             - 8.8.8.8
             - 8.8.4.4
         #authorization_modes: AlwaysAllow
+        #cloud_provider: openstack
         download_run_once: false
         deploy_netchecker: false
         # Required for hyperkube >=1.3.4. Set to false if installing old hyperkube
@@ -46,9 +42,11 @@ all: # keys must be unique, i.e. only one 'hosts' per group
         etcd:
             hosts:
                 ${replace(cp.name, "_", "-")}: {}
+%{ if network_plugin == "calico" ~}
         calico-rr:
             hosts:
                 ${replace(cp.name, "_", "-")}: {}
+%{ endif ~}
         kube-master:
             hosts:
                 ${replace(cp.name, "_", "-")}: {}
