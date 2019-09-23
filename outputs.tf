@@ -1,7 +1,8 @@
-resource "local_file" "k8s_file" {
+resource "local_file" "inventory" {
   filename = "${var.output_inventory_file}"
   content  = templatefile("./templates/inventory.tmpl", {
     env_name       = var.env_name
+    network_plugin = var.kubespray_network_plugin
     ssh_key_file   = var.ssh_private_key_file
     floating_ip    = openstack_compute_floatingip_associate_v2.cp_instance_floating_ip.floating_ip
     cp             = openstack_compute_instance_v2.cp_instance

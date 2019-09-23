@@ -21,10 +21,11 @@ runcmd:
   - /sbin/iptables -t nat -A POSTROUTING -p tcp -d ${minion.network.1.fixed_ip_v4} --dport 22 -j MASQUERADE
   - /sbin/iptables -A FORWARD -p tcp --dport 220${num} -j ACCEPT
 %{ endfor ~}
-  - apt update -y
-  - apt install -y iptables-persistent netfilter-persistent
-  - /usr/share/netfilter-persistent/plugins.d/15-ip4tables save
-  - systemctl daemon-reload
-  - systemctl enable netfilter-persistent.service
+  - /sbin/iptables-save > /etc/iptables/rules.v4
+  # - apt update -y
+  # - apt install -y iptables-persistent netfilter-persistent
+  # - /usr/share/netfilter-persistent/plugins.d/15-ip4tables save
+  # - systemctl daemon-reload
+  # - systemctl enable netfilter-persistent.service
 
 ###

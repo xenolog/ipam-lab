@@ -56,4 +56,9 @@ variable "output_inventory_file" {
   default = "./inventory.yaml"
 }
 
+variable "kubespray_network_plugin" {
+  type    = string
+  default = "calico"
+}
+
 ###

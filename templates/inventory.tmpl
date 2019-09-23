@@ -5,13 +5,13 @@ all: # keys must be unique, i.e. only one 'hosts' per group
             # ansible_host: 95.54.0.12
             # ip: 10.3.0.1
             # etcd_member_name: etcd1
-        ${cp.name}:
+        ${replace(cp.name, "_", "-")}:
             ip: ${cp.network.1.fixed_ip_v4}
             public_ip: ${cp.network.0.fixed_ip_v4}
             etcd_member_name: etcd1
             ansible_port: 22
 %{ for num, minion in minions ~}
-        ${minion.name}:
+        ${replace(minion.name, "_", "-")}:
             ansible_port: 220${num}
             ip: ${minion.network.1.fixed_ip_v4}
             public_ip: ${minion.network.0.fixed_ip_v4}
@@ -23,10 +23,11 @@ all: # keys must be unique, i.e. only one 'hosts' per group
         ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes"
         ansible_become: true
         ansible_become_user: root
+        # --- kubespray related vars --- #
         cluster_name: ${env_name}.local
         access_ip: ${floating_ip}
-        cloud_provider: openstack
-        kube_network_plugin: calico
+        #cloud_provider: openstack
+        kube_network_plugin: ${network_plugin}
         upstream_dns_servers:
             - 8.8.8.8
             - 8.8.4.4
@@ -34,7 +35,7 @@ all: # keys must be unique, i.e. only one 'hosts' per group
         nameservers:
             - 8.8.8.8
             - 8.8.4.4
-        authorization_modes: AlwaysAllow
+        #authorization_modes: AlwaysAllow
         download_run_once: false
         deploy_netchecker: false
         # Required for hyperkube >=1.3.4. Set to false if installing old hyperkube
@@ -44,19 +45,19 @@ all: # keys must be unique, i.e. only one 'hosts' per group
     children:
         etcd:
             hosts:
-                ${cp.name}: {}
+                ${replace(cp.name, "_", "-")}: {}
         calico-rr:
             hosts:
-                ${cp.name}: {}
+                ${replace(cp.name, "_", "-")}: {}
         kube-master:
             hosts:
-                ${cp.name}: {}
+                ${replace(cp.name, "_", "-")}: {}
             # vars:
             #     g2_var2: value3
         kube-node:
             hosts:
 %{ for num, minion in minions ~}
-                ${minion.name}: {}
+                ${replace(minion.name, "_", "-")}: {}
 %{ endfor ~}
         k8s-cluster:
             children:
