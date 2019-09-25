@@ -1,5 +1,6 @@
 #cloud-config
 # vim: syntax=yaml
+disable_root: ${disable_root}
 write_files:
   - content: |
       net.ipv4.ip_forward = 1

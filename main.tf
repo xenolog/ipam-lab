@@ -149,6 +149,7 @@ resource "openstack_compute_instance_v2" "cp_instance" {
   key_pair  = "${openstack_compute_keypair_v2.auth_kp.id}"
   security_groups = ["${openstack_networking_secgroup_v2.secgroup.name}"]  // using 'name' is a workaround to repeatly changing name secgroup resource to ID
   user_data = templatefile("./templates/cp_user_data.tmpl", {
+    disable_root   = var.ssh_disable_root
     minion_numbers = var.minion_numbers
     minions        = openstack_compute_instance_v2.minion_instance
   })

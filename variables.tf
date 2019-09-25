@@ -51,6 +51,11 @@ variable "minion_instance_flavor_name" {
   default = "dev.mon"
 }
 
+variable "ssh_disable_root" {
+  type    = bool
+  default = false
+}
+
 variable "output_inventory_file" {
   type    = string
   default = "./inventory.yaml"
