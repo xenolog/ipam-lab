@@ -8,6 +8,7 @@ resource "local_file" "inventory" {
     cp             = openstack_compute_instance_v2.cp_instance
     minion_numbers = var.minion_numbers
     minions        = openstack_compute_instance_v2.minion_instance
+    k8s_dashboard  = var.k8s_dashboard
   })
   depends_on = [
     "openstack_compute_instance_v2.cp_instance",

@@ -56,6 +56,11 @@ variable "ssh_disable_root" {
   default = false
 }
 
+variable "k8s_dashboard" {
+  type    = bool
+  default = true
+}
+
 variable "output_inventory_file" {
   type    = string
   default = "./inventory.yaml"
