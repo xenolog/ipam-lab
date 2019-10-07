@@ -23,6 +23,9 @@ all: # keys must be unique, i.e. only one 'hosts' per group
         cluster_name: ${env_name}.local
         access_ip: ${cp.network.1.fixed_ip_v4}
         kube_network_plugin: ${network_plugin}
+        supplementary_addresses_in_ssl_keys:
+            - ${cp.network.1.fixed_ip_v4}
+            - ${floating_ip}
         upstream_dns_servers:
             - 8.8.8.8
             - 8.8.4.4
