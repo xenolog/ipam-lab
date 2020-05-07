@@ -1,5 +1,5 @@
 resource "local_file" "inventory" {
-  filename = "${var.output_inventory_file}"
+  filename = var.output_inventory_file
   content  = templatefile("./templates/inventory.tmpl", {
     env_name       = var.env_name
     network_plugin = var.kubespray_network_plugin
@@ -11,8 +11,8 @@ resource "local_file" "inventory" {
     k8s_dashboard  = var.k8s_dashboard
   })
   depends_on = [
-    "openstack_compute_instance_v2.cp_instance",
-    "openstack_compute_instance_v2.minion_instance"
+    openstack_compute_instance_v2.cp_instance,
+    openstack_compute_instance_v2.minion_instance
   ]
 }
 
