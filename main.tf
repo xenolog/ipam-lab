@@ -1,54 +1,54 @@
 provider "openstack" {
-    cloud = var.clouds_yaml_entry
+  cloud = var.clouds_yaml_entry
 }
 
 resource "openstack_compute_keypair_v2" "auth_kp" {
-  name = "${var.env_name}__auth_kp"
+  name       = "${var.env_name}__auth_kp"
   public_key = file(local.ssh_public_key_file)
 }
 
 #------------------------------------------------------------------------------
 data "openstack_networking_network_v2" "external" {
-  name = "${var.ext_network_name}"
+  name = var.ext_network_name
 }
 
 resource "openstack_networking_network_v2" "public" {
-    name = "${var.env_name}__public"
-    admin_state_up = "true"
+  name           = "${var.env_name}__public"
+  admin_state_up = "true"
 }
 
 resource "openstack_networking_subnet_v2" "public" {
-    name = "${var.env_name}__public"
-    network_id = openstack_networking_network_v2.public.id
-    cidr = "192.168.1.0/24"
-    ip_version = 4
-    gateway_ip = ""  // .1 will be used as gateway
-    // dns_nameservers = ["8.8.8.8","8.8.4.4"]
+  name       = "${var.env_name}__public"
+  network_id = openstack_networking_network_v2.public.id
+  cidr       = "192.168.1.0/24"
+  ip_version = 4
+  gateway_ip = "" // .1 will be used as gateway
+  // dns_nameservers = ["8.8.8.8","8.8.4.4"]
 }
 
 resource "openstack_networking_router_v2" "public" {
-    name = "${var.env_name}__public"
-    admin_state_up = "true"
-    external_network_id = data.openstack_networking_network_v2.external.id
+  name                = "${var.env_name}__public"
+  admin_state_up      = "true"
+  external_network_id = data.openstack_networking_network_v2.external.id
 }
 
 resource "openstack_networking_router_interface_v2" "public" {
-    router_id = openstack_networking_router_v2.public.id
-    subnet_id = openstack_networking_subnet_v2.public.id
+  router_id = openstack_networking_router_v2.public.id
+  subnet_id = openstack_networking_subnet_v2.public.id
 }
 #------------------------------------------------------------------------------
 resource "openstack_networking_network_v2" "internal" {
-    name = "${var.env_name}__internal"
-    admin_state_up = "true"
+  name           = "${var.env_name}__internal"
+  admin_state_up = "true"
 }
 
 resource "openstack_networking_subnet_v2" "internal" {
-    name = "${var.env_name}__internal"
-    network_id = openstack_networking_network_v2.internal.id
-    cidr = "10.10.10.0/24"
-    ip_version = 4
-    no_gateway = true
-    // dns_nameservers = ["8.8.8.8","8.8.4.4"]
+  name       = "${var.env_name}__internal"
+  network_id = openstack_networking_network_v2.internal.id
+  cidr       = "10.10.10.0/24"
+  ip_version = 4
+  no_gateway = true
+  // dns_nameservers = ["8.8.8.8","8.8.4.4"]
 }
 #------------------------------------------------------------------------------
 resource "openstack_networking_secgroup_v2" "secgroup" {
@@ -138,25 +138,25 @@ resource "openstack_compute_floatingip_associate_v2" "cp_instance_floating_ip" {
 #   disk  = "10"
 # }
 data "openstack_compute_flavor_v2" "cp_instance_flavor" {
-  name = "${var.cp_instance_flavor_name}"
+  name = var.cp_instance_flavor_name
 }
 
 resource "openstack_compute_instance_v2" "cp_instance" {
-  name      = "${var.env_name}__control_plane"
-  image_id  = data.openstack_images_image_v2.ubuntu.id
-# flavor_id = "${openstack_compute_flavor_v2.cp_instance_flavor.id}"  // if flavor creation allowed by policy
-  flavor_id = data.openstack_compute_flavor_v2.cp_instance_flavor.id
-  key_pair  = openstack_compute_keypair_v2.auth_kp.id
-  security_groups = [openstack_networking_secgroup_v2.secgroup.name]  // using 'name' is a workaround to repeatly changing name secgroup resource to ID
+  name     = "${var.env_name}__control_plane"
+  image_id = data.openstack_images_image_v2.ubuntu.id
+  # flavor_id = "${openstack_compute_flavor_v2.cp_instance_flavor.id}"  // if flavor creation allowed by policy
+  flavor_id       = data.openstack_compute_flavor_v2.cp_instance_flavor.id
+  key_pair        = openstack_compute_keypair_v2.auth_kp.id
+  security_groups = [openstack_networking_secgroup_v2.secgroup.name] // using 'name' is a workaround to repeatly changing name secgroup resource to ID
   user_data = templatefile("./templates/cp_user_data.tmpl", {
     disable_root   = var.ssh_disable_root
     minion_numbers = var.minion_numbers
     minions        = openstack_compute_instance_v2.minion_instance
   })
-  network {  // network number #0
+  network { // network number #0
     uuid = openstack_networking_network_v2.public.id
   }
-  network {  // network number #1
+  network { // network number #1
     uuid = openstack_networking_network_v2.internal.id
   }
   depends_on = [
@@ -171,18 +171,18 @@ data "openstack_compute_flavor_v2" "minion_instance_flavor" {
 }
 
 resource "openstack_compute_instance_v2" "minion_instance" {
-  for_each  = toset(var.minion_numbers)
-  name      = "${var.env_name}__minion-${each.value}"
-  image_id  = data.openstack_images_image_v2.ubuntu.id
-# flavor_id = "${openstack_compute_flavor_v2.minion_instance_flavor.id}"  // if flavor creation allowed by policy
-  flavor_id = data.openstack_compute_flavor_v2.minion_instance_flavor.id
-  key_pair  = openstack_compute_keypair_v2.auth_kp.id
-  security_groups = [openstack_networking_secgroup_v2.secgroup.name]  // using 'name' is a workaround to repeatly changing name secgroup resource to ID
+  for_each = toset(var.minion_numbers)
+  name     = "${var.env_name}__minion-${each.value}"
+  image_id = data.openstack_images_image_v2.ubuntu.id
+  # flavor_id = "${openstack_compute_flavor_v2.minion_instance_flavor.id}"  // if flavor creation allowed by policy
+  flavor_id       = data.openstack_compute_flavor_v2.minion_instance_flavor.id
+  key_pair        = openstack_compute_keypair_v2.auth_kp.id
+  security_groups = [openstack_networking_secgroup_v2.secgroup.name] // using 'name' is a workaround to repeatly changing name secgroup resource to ID
 
-  network {  // network number #0
+  network { // network number #0
     uuid = openstack_networking_network_v2.public.id
   }
-  network {  // network number #1
+  network { // network number #1
     uuid = openstack_networking_network_v2.internal.id
   }
   depends_on = [openstack_networking_secgroup_v2.secgroup]

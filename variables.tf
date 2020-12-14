@@ -1,5 +1,10 @@
 variable "env_name" {
-  type    = string
+  type = string
+}
+
+variable "rack_names" {
+  type    = list(string)
+  default = ["1", "2"]
 }
 
 variable "minion_numbers" {
@@ -31,23 +36,23 @@ variable "ssh_public_key_file" {
   default = ""
 }
 locals {
-  ssh_public_key_file = "${var.ssh_public_key_file != "" ? var.ssh_public_key_file : "${var.ssh_private_key_file}.pub"}"
+  ssh_public_key_file = var.ssh_public_key_file != "" ? var.ssh_public_key_file : "${var.ssh_private_key_file}.pub"
 }
 
 variable "cp_instance_image_name" {
   type    = string
-  default = "bionic-server-cloudimg-amd64-20190612"
+  default = "focal-server-cloudimg-amd64-20200914"
 }
 
 variable "cp_instance_flavor_name" {
-  type    = string
-#   default = "re.jenkins.slave"
+  type = string
+  #   default = "re.jenkins.slave"
   default = "dev.cfg"
 }
 
 variable "minion_instance_flavor_name" {
-  type    = string
-#   default = "re.jenkins.slave"
+  type = string
+  #   default = "re.jenkins.slave"
   default = "dev.mon"
 }
 
