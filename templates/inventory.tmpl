@@ -1,11 +1,18 @@
 ---
 all: # keys must be unique, i.e. only one 'hosts' per group
     hosts:
-        ${replace(cp.name, "_", "-")}:
-            ip: ${cp.network.1.fixed_ip_v4}
-            public_ip: ${cp.network.0.fixed_ip_v4}
-            etcd_member_name: etcd1
+%{ for num, cpNode in cps ~}
+        ${replace(cpNode.name, "_", "-")}:
+            %{ if num == 0 ~}
             ansible_port: 22
+            etcd_member_name: etcd1
+            %{ else ~}
+            ansible_port: 220${num}
+            %{ endif ~}
+            ansible_port: %{ if num != 0 }220${num}%{ else }22%{ endif }
+            ip: ${cpNode.network.1.fixed_ip_v4}
+            public_ip: ${cpNode.network.0.fixed_ip_v4}
+%{ endfor ~}
 %{ for num, minion in minions ~}
         ${replace(minion.name, "_", "-")}:
             ansible_port: 220${num}
@@ -21,10 +28,12 @@ all: # keys must be unique, i.e. only one 'hosts' per group
         ansible_become_user: root
         # --- kubespray related vars --- #
         cluster_name: ${env_name}.local
-        access_ip: ${cp.network.1.fixed_ip_v4}
+        access_ip: ${cps.network.1.fixed_ip_v4}
         kube_network_plugin: ${network_plugin}
         supplementary_addresses_in_ssl_keys:
-            - ${cp.network.1.fixed_ip_v4}
+          %{ for num, cpNode in cps ~}
+            - ${cpNode.network.1.fixed_ip_v4}
+          %{ endfor ~}
             - ${floating_ip}
         upstream_dns_servers:
             - 8.8.8.8
@@ -45,17 +54,19 @@ all: # keys must be unique, i.e. only one 'hosts' per group
     children:
         etcd:
             hosts:
-                ${replace(cp.name, "_", "-")}: {}
+              %{ for num, cpNode in cps ~}
+                ${replace(cpNode.name, "_", "-")}: {}
+              %{ endfor ~}
 %{ if network_plugin == "calico" ~}
         calico-rr:
             hosts:
-                ${replace(cp.name, "_", "-")}: {}
+                ${replace(cps[0].name, "_", "-")}: {}
 %{ endif ~}
         kube-master:
             hosts:
-                ${replace(cp.name, "_", "-")}: {}
-            # vars:
-            #     g2_var2: value3
+              %{ for num, cpNode in cps ~}
+                ${replace(cpNode.name, "_", "-")}: {}
+              %{ endfor ~}
         kube-node:
             hosts:
 %{ for num, minion in minions ~}

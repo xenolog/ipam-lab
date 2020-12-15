@@ -4,3 +4,4 @@ terraform.tfstate*
 inventory.ini
 inventory.yaml
 kubespray
+env__*
