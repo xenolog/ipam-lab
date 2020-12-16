@@ -18,13 +18,13 @@ runcmd:
   - /sbin/iptables -t nat -P PREROUTING  ACCEPT
 %{ for num, node in slave_nodes ~}
   # ${node.name}
-  - /sbin/iptables -t nat -A PREROUTING  -p tcp --dport 220${num+1} -j DNAT --to-destination ${node.network.1.fixed_ip_v4}:22
-  - /sbin/iptables -t nat -A POSTROUTING -p tcp -d ${node.network.1.fixed_ip_v4} --dport 22 -j MASQUERADE
-  - /sbin/iptables -A FORWARD -p tcp --dport 220${num+1} -j ACCEPT
+  - /sbin/iptables -t nat -A PREROUTING  -p tcp --dport 220${format("%02d",num+1)} -j DNAT --to-destination ${node.network.0.fixed_ip_v4}:22
+  - /sbin/iptables -t nat -A POSTROUTING -p tcp -d ${node.network.0.fixed_ip_v4} --dport 22 -j MASQUERADE
+  - /sbin/iptables -A FORWARD -p tcp --dport 220${format("%02d",num+1)} -j ACCEPT
 %{ endfor ~}
   - mkdir -p /etc/iptables
   - /sbin/iptables-save > /etc/iptables/rules.v4
-  - ip route replace default via ${gw}
+  # - ip route replace default via ${gw}
   # - apt update -y
   # - apt install -y iptables-persistent netfilter-persistent
   # - /usr/share/netfilter-persistent/plugins.d/15-ip4tables save

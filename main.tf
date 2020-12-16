@@ -22,8 +22,9 @@ data "openstack_networking_network_v2" "external" {
 }
 
 resource "openstack_networking_network_v2" "mgmt" {
-  name           = "${var.env_name}__mgmt"
-  admin_state_up = "true"
+  name                  = "${var.env_name}__mgmt"
+  admin_state_up        = "true"
+  port_security_enabled = false
 }
 
 resource "openstack_networking_subnet_v2" "mgmt" {
@@ -53,9 +54,10 @@ resource "openstack_networking_router_v2" "rack" {
 }
 
 resource "openstack_networking_network_v2" "rack" {
-  for_each       = { for r in local.rack_networks : r.name => r }
-  name           = each.key
-  admin_state_up = "true"
+  for_each              = { for r in local.rack_networks : r.name => r }
+  name                  = each.key
+  admin_state_up        = "true"
+  port_security_enabled = false
 }
 
 resource "openstack_networking_subnet_v2" "rack" {
@@ -74,14 +76,13 @@ resource "openstack_networking_port_v2" "tor" {
   network_id            = openstack_networking_network_v2.rack[each.key].id
   admin_state_up        = true
   port_security_enabled = false
-  # security_group_ids = ["${openstack_compute_secgroup_v2.secgroup_1.id}"]
+  no_security_groups    = true
 
   fixed_ip {
     subnet_id  = openstack_networking_subnet_v2.rack[each.key].id
     ip_address = each.value.gw
   }
   depends_on = [
-    openstack_networking_secgroup_v2.secgroup,
     openstack_networking_router_v2.rack,
     openstack_networking_network_v2.rack,
     openstack_networking_subnet_v2.rack,
@@ -103,87 +104,19 @@ resource "openstack_networking_port_v2" "node2rack" {
   network_id            = openstack_networking_network_v2.rack[each.value.rack_network].id
   admin_state_up        = true
   port_security_enabled = false
-  # security_group_ids = ["${openstack_compute_secgroup_v2.secgroup_1.id}"]
+  no_security_groups    = true
 
   fixed_ip {
     subnet_id  = openstack_networking_subnet_v2.rack[each.value.rack_network].id
     ip_address = each.value.rack_ip
   }
   depends_on = [
-    openstack_networking_secgroup_v2.secgroup,
     openstack_networking_router_v2.rack,
     openstack_networking_network_v2.rack,
     openstack_networking_subnet_v2.rack,
   ]
 }
 
-#------------------------------------------------------------------------------
-resource "openstack_networking_secgroup_v2" "secgroup" {
-  name                 = "${var.env_name}__secgroup"
-  delete_default_rules = true
-}
-resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_v4_egress" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  security_group_id = openstack_networking_secgroup_v2.secgroup.id
-  depends_on        = [openstack_networking_secgroup_v2.secgroup]
-}
-resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_v4_egress_tcp" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  protocol          = "tcp"
-  port_range_min    = 1
-  port_range_max    = 65535
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = openstack_networking_secgroup_v2.secgroup.id
-  depends_on        = [openstack_networking_secgroup_v2.secgroup]
-}
-resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_v4_egress_udp" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  protocol          = "udp"
-  port_range_min    = 1
-  port_range_max    = 65535
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = openstack_networking_secgroup_v2.secgroup.id
-  depends_on        = [openstack_networking_secgroup_v2.secgroup]
-}
-resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_v4_egress_icmp" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  protocol          = "icmp"
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = openstack_networking_secgroup_v2.secgroup.id
-  depends_on        = [openstack_networking_secgroup_v2.secgroup]
-}
-resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_v4_ingress_tcp" {
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  protocol          = "tcp"
-  port_range_min    = 1
-  port_range_max    = 65535
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = openstack_networking_secgroup_v2.secgroup.id
-  depends_on        = [openstack_networking_secgroup_v2.secgroup]
-}
-resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_v4_ingress_udp" {
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  protocol          = "udp"
-  port_range_min    = 1
-  port_range_max    = 65535
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = openstack_networking_secgroup_v2.secgroup.id
-  depends_on        = [openstack_networking_secgroup_v2.secgroup]
-}
-resource "openstack_networking_secgroup_rule_v2" "secgroup_rule_v4_ingress_icmp" {
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  protocol          = "icmp"
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = openstack_networking_secgroup_v2.secgroup.id
-  depends_on        = [openstack_networking_secgroup_v2.secgroup]
-}
 #------------------------------------------------------------------------------
 data "openstack_images_image_v2" "ubuntu" {
   name = var.instance_image_name
@@ -213,23 +146,22 @@ resource "openstack_compute_instance_v2" "cp_instance" {
   name     = each.key
   image_id = data.openstack_images_image_v2.ubuntu.id
   # flavor_id = "${openstack_compute_flavor_v2.cp_instance_flavor.id}"  // if flavor creation allowed by policy
-  flavor_id       = data.openstack_compute_flavor_v2.cp_instance_flavor.id
-  key_pair        = openstack_compute_keypair_v2.auth_kp.id
-  security_groups = [openstack_networking_secgroup_v2.secgroup.name] // using 'name' is a workaround to repeatly changing name secgroup resource to ID
+  flavor_id = data.openstack_compute_flavor_v2.cp_instance_flavor.id
+  key_pair  = openstack_compute_keypair_v2.auth_kp.id
   user_data = templatefile("./templates/cp1_user_data.tmpl", {
     disable_root = var.ssh_disable_root
     gw           = openstack_networking_subnet_v2.mgmt.gateway_ip
     slave_nodes  = [for node in openstack_compute_instance_v2.minion_instance : node if node.name != local.cp1st_node.name]
   })
   network { // network number #0
+    # access_network = true
     uuid = openstack_networking_network_v2.mgmt.id
   }
   network { // network number #1
     port = openstack_networking_port_v2.node2rack[each.key].id
   }
   depends_on = [
-    openstack_networking_secgroup_v2.secgroup,
-    # # #openstack_compute_instance_v2.minion_instance,
+    openstack_compute_instance_v2.minion_instance, # to NAT ssh to minion nodes on non-standart port over mgmt subnet
     openstack_networking_port_v2.node2rack
   ]
 }
@@ -245,21 +177,19 @@ resource "openstack_compute_instance_v2" "minion_instance" {
   name     = each.key
   image_id = data.openstack_images_image_v2.ubuntu.id
   # flavor_id = "${openstack_compute_flavor_v2.minion_instance_flavor.id}"  // if flavor creation allowed by policy
-  flavor_id       = data.openstack_compute_flavor_v2.minion_instance_flavor.id
-  key_pair        = openstack_compute_keypair_v2.auth_kp.id
-  security_groups = [openstack_networking_secgroup_v2.secgroup.name] // using 'name' is a workaround to repeatly changing name secgroup resource to ID
+  flavor_id = data.openstack_compute_flavor_v2.minion_instance_flavor.id
+  key_pair  = openstack_compute_keypair_v2.auth_kp.id
 
   network { // network number #0
+    # access_network = true
     uuid = openstack_networking_network_v2.mgmt.id
   }
   network { // network number #1
     port = openstack_networking_port_v2.node2rack[each.key].id
   }
   depends_on = [
-    openstack_networking_secgroup_v2.secgroup,
     openstack_networking_port_v2.node2rack
   ]
 }
-
 
 ###

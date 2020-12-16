@@ -29,7 +29,7 @@ resource "local_file" "cp1_user_data" {
 #   ]
 # }
 
-output "cp1_instance_floating_ip_addr" {
+output "ACCESS_ip_addr" {
   value = openstack_compute_floatingip_associate_v2.cp_instance_floating_ip.floating_ip
 }
 
@@ -40,7 +40,6 @@ output "CPs_mgmt_ip_addrs" {
 output "minions_mgmt_ip_addrs" {
   value = { for m in values(openstack_compute_instance_v2.minion_instance) : m.name => m.network[0].fixed_ip_v4 }
 }
-
 
 output "rack_networks" {
   value = local.rack_networks
